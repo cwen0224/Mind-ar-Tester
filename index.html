@@ -1,28 +1,60 @@
 ﻿<!DOCTYPE html>
 <html>
   <head>
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
+    <style>
+      body { margin: 0; overflow: hidden; }
+      /* 縮放 UI 控制項 */
+      .ui-container {
+        position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
+        z-index: 1000; display: flex; gap: 10px;
+      }
+      button {
+        padding: 12px 20px; background: rgba(0,0,0,0.6); color: white;
+        border: 2px solid white; border-radius: 25px; font-size: 16px;
+      }
+      /* 關鍵：透過 CSS 放大影像容器 */
+      #video-container {
+        transition: transform 0.3s ease;
+        transform-origin: center center;
+      }
+    </style>
   </head>
   <body>
-    <a-scene mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1" color-space="sRGB" renderer="colorManagement: true, physicallyCorrectLights" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-      <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
+    <div class="ui-container">
+      <button onclick="changeZoom(1)">1x (標準)</button>
+      <button onclick="changeZoom(1.5)">1.5x (遠距)</button>
+      <button onclick="changeZoom(2)">2x (狙擊)</button>
+    </div>
 
-      <a-entity mindar-image-target="targetIndex: 0">
-        <a-box position="0 0 0.5" scale="0.5 0.5 0.5" material="color: blue; opacity: 0.8"></a-box>
-      </a-entity>
+    <div id="video-container">
+      <a-scene 
+        mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; filterMinCF:0.0001; filterBeta: 0.001;" 
+        color-space="sRGB" 
+        renderer="colorManagement: true, antialias: true, precision: high" 
+        vr-mode-ui="enabled: false" 
+        device-orientation-permission-ui="enabled: false">
+        
+        <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
 
-      <a-entity mindar-image-target="targetIndex: 1">
-        <a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere>
-      </a-entity>
-      <a-entity mindar-image-target="targetIndex: 2">
-        <a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere>
-      </a-entity>
-      <a-entity mindar-image-target="targetIndex: 3">
-        <a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere>
-      </a-entity>
+        <a-entity mindar-image-target="targetIndex: 0">
+          <a-box position="0 0 0.5" scale="0.5 0.5 0.5" material="color: blue; opacity: 0.8"></a-box>
+        </a-entity>
 
-    </a-scene>
+        <a-entity mindar-image-target="targetIndex: 1"><a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere></a-entity>
+        <a-entity mindar-image-target="targetIndex: 2"><a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere></a-entity>
+        <a-entity mindar-image-target="targetIndex: 3"><a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere></a-entity>
+      </a-scene>
+    </div>
+
+    <script>
+      function changeZoom(level) {
+        // 抓取 Mind-AR 生成的影像容器並進行 CSS 縮放
+        const container = document.querySelector('a-scene').parentElement;
+        container.style.transform = scale();
+      }
+    </script>
   </body>
 </html>
