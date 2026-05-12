@@ -2,39 +2,34 @@
 <html>
   <head>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
-    <link rel="manifest" href="manifest.json">
+    <link rel="manifest" href="manifest.json?v=14">
     <script src="https://aframe.io/releases/1.5.0/aframe.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mind-ar@1.2.5/dist/mindar-image-aframe.prod.js"></script>
     <style>
       body { margin: 0; overflow: hidden; font-family: sans-serif; background: black; }
-      
-      /* 強制移除 A-Frame 產生的所有遮擋與按鈕 */
       .a-enter-vr, .a-enter-ar, .a-loader-title { display: none !important; }
-      .a-canvas { width: 100% !important; height: 100% !important; }
-
-      #pwa-install-banner {
-        position: fixed; top: 0; left: 0; width: 100%; background: #e67e22;
-        color: white; padding: 12px; text-align: center; z-index: 5000;
-        display: none; cursor: pointer; font-size: 14px;
+      
+      /* 版本號標籤 */
+      #version-tag {
+        position: fixed; top: 10px; left: 10px; z-index: 4000;
+        color: rgba(255,255,255,0.5); font-size: 10px; pointer-events: none;
       }
 
+      #pwa-install-banner { position: fixed; top: 0; left: 0; width: 100%; background: #e67e22; color: white; padding: 12px; text-align: center; z-index: 5000; display: none; cursor: pointer; }
       #share-btn { position: fixed; top: 50px; right: 20px; z-index: 2000; width: 45px; height: 45px; background: rgba(0,0,0,0.5); color: white; border: 1.5px solid white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
       #qr-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; color: white; }
       #qr-overlay img { width: 220px; height: 220px; border: 5px solid white; border-radius: 10px; margin-bottom: 20px; }
-      
       .ui-container { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 15px; }
       .zoom-btn { padding: 10px 20px; background: rgba(255,255,255,0.2); color: white; border: 1px solid white; border-radius: 20px; backdrop-filter: blur(5px); }
-      
       #video-container { transition: transform 0.3s ease; transform-origin: center center; width: 100vw; height: 100vh; }
     </style>
   </head>
   <body>
+    <div id="version-tag">Build: 20260512-v1.0.3</div>
+
     <div id="pwa-install-banner" onclick="installPWA()">✨ 安裝 App 體驗全螢幕</div>
     <div id="share-btn" onclick="toggleQR()">📱</div>
-    <div id="qr-overlay" onclick="toggleQR()">
-      <img src="assets/project-qrcode.png">
-      <p>點擊關閉</p>
-    </div>
+    <div id="qr-overlay" onclick="toggleQR()"><img src="assets/project-qrcode.png"><p>點擊關閉</p></div>
 
     <div class="ui-container">
       <button class="zoom-btn" onclick="changeZoom(1)">1x</button>
@@ -43,13 +38,8 @@
     </div>
 
     <div id="video-container">
-      <a-scene 
-        mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; uiLoading: no;" 
-        color-space="sRGB" renderer="colorManagement: true, antialias: true" 
-        vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
-        
+      <a-scene mindar-image="imageTargetSrc: ./assets/targets.mind?v=2; maxTrack: 1; uiLoading: no;" color-space="sRGB" renderer="colorManagement: true, antialias: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-
         <a-entity mindar-image-target="targetIndex: 0"><a-box position="0 0 0.5" scale="0.5 0.5 0.5" material="color: blue; opacity: 0.8"></a-box></a-entity>
         <a-entity mindar-image-target="targetIndex: 1"><a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere></a-entity>
         <a-entity mindar-image-target="targetIndex: 2"><a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere></a-entity>
@@ -58,6 +48,11 @@
     </div>
 
     <script>
+      // 強制檢查更新邏輯
+      window.addEventListener('load', () => {
+        console.log("PWA Loaded");
+      });
+
       let deferredPrompt;
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -66,10 +61,7 @@
       });
 
       function installPWA() {
-        if (!deferredPrompt) {
-          alert('iOS 用戶請點擊「分享」按鈕並選擇「加入主畫面」');
-          return;
-        }
+        if (!deferredPrompt) { alert('iOS 用戶請用 Safari「加入主畫面」'); return; }
         deferredPrompt.prompt();
       }
 
