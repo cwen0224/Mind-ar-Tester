@@ -8,83 +8,70 @@
     <style>
       body { margin: 0; overflow: hidden; font-family: sans-serif; background: #000; }
       .mindar-ui-overlay, .mindar-ui-loading, .mindar-ui-compatibility, .a-enter-vr, .a-enter-ar { display: none !important; }
-
-      #version-tag {
-        position: fixed; top: 15px; left: 15px; z-index: 9999;
-        background: rgba(255, 0, 0, 0.8); color: white; padding: 5px 10px; 
-        font-size: 12px; border-radius: 5px; font-weight: bold;
-      }
-
+      #version-tag { position: fixed; top: 15px; left: 15px; z-index: 9999; background: #2980b9; color: white; padding: 5px 10px; font-size: 12px; border-radius: 5px; font-weight: bold; }
       #share-btn { position: fixed; top: 15px; right: 15px; z-index: 2000; width: 45px; height: 45px; background: rgba(0,0,0,0.6); color: white; border: 2px solid white; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
-      
-      /* QR Code 彈窗優化 */
-      #qr-overlay { 
-        position: fixed; top: 0; left: 0; width: 100%; height: 100%; 
-        background: rgba(0,0,0,0.9); z-index: 3000; 
-        display: none; justify-content: center; align-items: center; flex-direction: column; color: white; 
-      }
+      #qr-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.9); z-index: 3000; display: none; justify-content: center; align-items: center; flex-direction: column; color: white; }
       #qr-overlay img { width: 220px; height: 220px; border: 5px solid white; margin-bottom: 20px; }
-      
-      /* PWA 安裝/更新按鈕 */
-      .pwa-btn {
-        background: #27ae60; color: white; border: none; padding: 15px 30px;
-        border-radius: 10px; font-size: 16px; font-weight: bold; cursor: pointer;
-        box-shadow: 0 4px 15px rgba(0,0,0,0.5); width: 220px;
-      }
-
+      .pwa-btn { background: #27ae60; color: white; border: none; padding: 15px 30px; border-radius: 10px; font-size: 16px; font-weight: bold; width: 220px; }
+      #debug-info { margin-top: 10px; font-size: 11px; color: #777; }
       .ui-container { position: fixed; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 1000; display: flex; gap: 15px; }
       .zoom-btn { padding: 12px 24px; background: white; color: black; border: none; border-radius: 30px; font-weight: bold; }
       #video-container { transition: transform 0.3s ease; transform-origin: center center; width: 100vw; height: 100vh; }
     </style>
   </head>
   <body>
-    <div id="version-tag">VER: 2026.05.12-V3</div>
-
+    <div id="version-tag">VER: 2026.05.12-V5 (Debug)</div>
     <div id="share-btn" onclick="toggleQR()">📱</div>
-
     <div id="qr-overlay">
       <img src="assets/project-qrcode.png" onclick="toggleQR()">
-      <button class="pwa-btn" onclick="handlePWA()">安裝 / 更新 App</button>
+      <button class="pwa-btn" id="installBtn" onclick="handlePWA()">安裝 / 更新</button>
+      <div id="debug-info">等待安裝信號...</div>
       <p style="margin-top:15px; font-size:12px; color:#aaa;" onclick="toggleQR()">點擊背景關閉</p>
     </div>
-
     <div class="ui-container">
       <button class="zoom-btn" onclick="changeZoom(1)">1x</button>
-      <button class="zoom-btn" onclick="changeZoom(1.5)">1.5x</button>
       <button class="zoom-btn" onclick="changeZoom(2)">2x</button>
     </div>
-
     <div id="video-container">
       <a-scene mindar-image="imageTargetSrc: ./assets/targets.mind; maxTrack: 1; uiLoading: no; uiScanning: no;" color-space="sRGB" renderer="colorManagement: true, antialias: true" vr-mode-ui="enabled: false" device-orientation-permission-ui="enabled: false">
         <a-camera position="0 0 0" look-controls="enabled: false"></a-camera>
-        <a-entity mindar-image-target="targetIndex: 0"><a-box position="0 0 0.5" scale="0.5 0.5 0.5" material="color: blue; opacity: 0.8"></a-box></a-entity>
-        <a-entity mindar-image-target="targetIndex: 1"><a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere></a-entity>
-        <a-entity mindar-image-target="targetIndex: 2"><a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere></a-entity>
-        <a-entity mindar-image-target="targetIndex: 3"><a-sphere position="0 0 0.5" radius="0.3" material="color: red"></a-sphere></a-entity>
+        <a-entity mindar-image-target="targetIndex: 0"><a-box position="0 0 0.5" scale="0.5 0.5 0.5" material="color: blue;"></a-box></a-entity>
       </a-scene>
     </div>
 
     <script>
       let deferredPrompt;
+      const debugInfo = document.getElementById('debug-info');
+
+      // 註冊 SW
+      if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').then(() => {
+          debugInfo.innerText = "Service Worker: 已就緒";
+        });
+      }
+
+      // 監聽安裝信號
       window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
         deferredPrompt = e;
+        debugInfo.innerText = "安裝信號: 已接收 (可安裝)";
+        document.getElementById('installBtn').style.background = '#e67e22';
       });
 
       function handlePWA() {
-        // 1. 執行更新：強制重新載入
-        if (confirm("即將檢查更新並嘗試安裝，是否繼續？")) {
-          if (deferredPrompt) {
-            deferredPrompt.prompt();
-            deferredPrompt.userChoice.then((choice) => {
-              if (choice.outcome === 'accepted') console.log('User accepted');
-              deferredPrompt = null;
-            });
-          } else {
-            // iOS 或已安裝的情況
-            alert("iOS 用戶請點擊 Safari 分享鈕 >「加入主畫面」。\n已安裝者將自動重整更新。");
-            location.reload(true);
-          }
+        const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+        
+        if (deferredPrompt) {
+          deferredPrompt.prompt();
+          deferredPrompt.userChoice.then((choice) => {
+            if (choice.outcome === 'accepted') debugInfo.innerText = "安裝中...";
+            deferredPrompt = null;
+          });
+        } else if (isIOS) {
+          alert("iOS 用戶請點擊「分享」>「加入主畫面」");
+        } else {
+          alert("目前無法直接安裝。請確保使用 Chrome 並從選單選擇「安裝應用程式」。\n正在嘗試重整...");
+          location.reload(true);
         }
       }
 
@@ -96,22 +83,6 @@
       function changeZoom(level) {
         document.getElementById('video-container').style.transform = scale();
       }
-
-      // 版本號自動隱藏
-      window.addEventListener('load', () => {
-        setTimeout(() => {
-          const tag = document.getElementById('version-tag');
-          if(tag) tag.style.display = 'none';
-        }, 5000);
-      });
     </script>
-  <script>
-      if ('serviceWorker' in navigator) {
-        window.addEventListener('load', () => {
-          navigator.serviceWorker.register('./sw.js');
-        });
-      }
-    </script>
-</body>
+  </body>
 </html>
-
