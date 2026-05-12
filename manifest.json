@@ -1,0 +1,16 @@
+﻿{
+  "short_name": "AR Tester",
+  "name": "Mind AR Game Tester",
+  "icons": [
+    {
+      "src": "assets/project-qrcode.png",
+      "type": "image/png",
+      "sizes": "512x512"
+    }
+  ],
+  "start_url": "./index.html",
+  "background_color": "#000000",
+  "display": "standalone",
+  "scope": "./",
+  "theme_color": "#000000"
+}
